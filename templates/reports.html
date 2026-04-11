@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports | Smart Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</head>
+<body onload="checkAuth(); loadReports();">
+    <nav>
+        <div class="container nav-container">
+            <a href="/" class="logo"><i class="fa-solid fa-graduation-cap"></i> SmartSys Dashboard</a>
+            <ul class="nav-links" style="align-items: center;">
+                <li><a href="/dashboard">Overview</a></li>
+                <li><a href="/mark">Mark Attendance</a></li>
+                <li><a href="/register_face_page">Register Face</a></li>
+                <li><a href="/recognize_page">Live Recognition</a></li>
+                <li><a href="/reports" style="color:var(--primary-color)">Reports</a></li>
+                <li><button id="logout-btn" class="btn btn-outline" style="padding: 0.3rem 0.8rem;"><i class="fa-solid fa-sign-out-alt"></i> Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container animated" style="padding-top: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>Attendance Reports</h2>
+            <button class="btn btn-outline" onclick="loadReports()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Student Name</th>
+                        <th>Roll Number</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="reports-table-body">
+                    <tr><td colspan="6" class="text-center">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        async function loadReports() {
+            const tableBody = document.getElementById('reports-table-body');
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
+            
+            const records = await fetchAttendance();
+            
+            if (!records || records.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No attendance records found.</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = '';
+            records.forEach(record => {
+                let badgeClass = 'badge-present';
+                if(record.status === 'Absent') badgeClass = 'badge-absent';
+                if(record.status === 'Late') badgeClass = 'badge-late';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>#${record.id}</td>
+                    <td style="font-weight: 500;">${record.student_name}</td>
+                    <td class="text-muted">${record.roll_number}</td>
+                    <td>${record.date}</td>
+                    <td><span class="badge ${badgeClass}">${record.status}</span></td>
+                    <td>
+                        <button onclick="deleteRecord(${record.id})" class="btn" style="background: transparent; color: var(--danger); padding: 0.2rem 0.5rem;" title="Delete Record">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>

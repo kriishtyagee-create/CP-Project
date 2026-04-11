@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Smart Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <style>
+        .chart-container {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+            margin-top: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body onload="checkAuth(); initDashboard();">
+    <nav>
+        <div class="container nav-container">
+            <a href="/" class="logo"><i class="fa-solid fa-graduation-cap"></i> SmartSys Dashboard</a>
+            <ul class="nav-links" style="align-items: center;">
+                <li><a href="/dashboard" style="color:var(--primary-color)">Overview</a></li>
+                <li><a href="/mark">Mark Attendance</a></li>
+                <li><a href="/register_face_page">Register Face</a></li>
+                <li><a href="/recognize_page">Live Recognition</a></li>
+                <li><a href="/reports">Reports</a></li>
+                <li><button id="logout-btn" class="btn btn-outline" style="padding: 0.3rem 0.8rem;"><i class="fa-solid fa-sign-out-alt"></i> Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container animated" style="padding-top: 2rem;">
+        <h2 style="font-weight: 600;">Welcome, Admin!</h2>
+        <p class="text-muted">Here is the current attendance summary.</p>
+        
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3 id="stat-total">0</h3>
+                    <p>Total Records</p>
+                </div>
+                <i class="fa-solid fa-users fa-3x" style="color:var(--primary-color); opacity: 0.2;"></i>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3 id="stat-present" style="color:var(--success);">0</h3>
+                    <p>Present</p>
+                </div>
+                <i class="fa-solid fa-check-circle fa-3x" style="color:var(--success); opacity: 0.2;"></i>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3 id="stat-absent" style="color:var(--danger);">0</h3>
+                    <p>Absent</p>
+                </div>
+                <i class="fa-solid fa-xmark-circle fa-3x" style="color:var(--danger); opacity: 0.2;"></i>
+            </div>
+        </div>
+
+        <div class="activity-container" style="background: var(--white); padding: 1.5rem; border-radius: 10px; box-shadow: var(--shadow-sm); margin-top: 2rem; max-width: 800px; margin-left: auto; margin-right: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="color: var(--text-dark); margin: 0;"><i class="fa-solid fa-list-ul"></i> Recent Activity</h3>
+                <a href="/reports" style="font-size: 0.9rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">View All</a>
+            </div>
+            <div id="activity-list">
+                <p class="text-muted text-center" style="padding: 2rem 0;">Loading activity...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        async function initDashboard() {
+            const records = await fetchAttendance();
+            if (!records) return;
+
+            const total = records.length;
+            const present = records.filter(r => r.status === 'Present').length;
+            const absent = records.filter(r => r.status === 'Absent').length;
+            const late = records.filter(r => r.status === 'Late').length;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-present').innerText = present;
+            document.getElementById('stat-absent').innerText = absent;
+
+            // Render Recent Activity
+            const activityList = document.getElementById('activity-list');
+            if (activityList) {
+                activityList.innerHTML = '';
+                const recent = [...records].reverse().slice(0, 5);
+                
+                if (recent.length === 0) {
+                    activityList.innerHTML = '<p class="text-muted text-center" style="padding: 2rem 0;">No recent activity found.</p>';
+                } else {
+                    recent.forEach(r => {
+                        let statusColor = 'var(--success)';
+                        let icon = 'fa-check';
+                        
+                        if (r.status === 'Absent') {
+                            statusColor = 'var(--danger)';
+                            icon = 'fa-xmark';
+                        } else if (r.status === 'Late') {
+                            statusColor = 'var(--warning)';
+                            icon = 'fa-clock';
+                        }
+                        
+                        activityList.innerHTML += `
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid #f1f5f9;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div style="width: 40px; height: 40px; border-radius: 50%; background: ${statusColor}15; color: ${statusColor}; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                                        <i class="fa-solid ${icon}"></i>
+                                    </div>
+                                    <div>
+                                        <h4 style="margin: 0; font-size: 1rem; color: var(--text-dark); font-weight: 600;">${r.student_name}</h4>
+                                        <p style="margin: 0; font-size: 0.8rem; margin-top: 0.2rem;" class="text-muted">${r.roll_number} &bull; ${r.date}</p>
+                                    </div>
+                                </div>
+                                <span style="font-weight: 600; color: ${statusColor}; font-size: 0.9rem; background: ${statusColor}10; padding: 0.2rem 0.6rem; border-radius: 12px;">${r.status}</span>
+                            </div>
+                        `;
+                    });
+                    
+                    // remove last border
+                    const lastChild = activityList.lastElementChild;
+                    if (lastChild) lastChild.style.borderBottom = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

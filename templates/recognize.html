@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Recognition | Smart Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <style>
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            background: #000;
+        }
+        .video-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .live-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+    </style>
+</head>
+<body onload="checkAuth();">
+    <nav>
+        <div class="container nav-container">
+            <a href="/" class="logo"><i class="fa-solid fa-graduation-cap"></i> SmartSys Dashboard</a>
+            <ul class="nav-links" style="align-items: center;">
+                <li><a href="/dashboard">Overview</a></li>
+                <li><a href="/mark">Mark Attendance</a></li>
+                <li><a href="/register_face_page">Register Face</a></li>
+                <li><a href="/recognize_page" style="color:var(--primary-color)">Live Recognition</a></li>
+                <li><a href="/reports">Reports</a></li>
+                <li><button id="logout-btn" class="btn btn-outline" style="padding: 0.3rem 0.8rem;"><i class="fa-solid fa-sign-out-alt"></i> Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container animated mt-2" style="padding-top: 2rem; text-align: center;">
+        <h2 style="font-weight: 600; margin-bottom: 0.5rem;">Auto-Mark Attendance</h2>
+        <p class="text-muted" style="margin-bottom: 2rem;">Stand in front of the camera. Attendance will be marked automatically.</p>
+        
+        <div class="video-container">
+            <div class="live-badge">
+                <div class="live-dot"></div> LIVE
+            </div>
+            <!-- The img src points to our flask video stream route -->
+            <img src="/api/video_feed" alt="Video Stream">
+        </div>
+        
+        <div style="margin-top: 2rem;">
+            <p style="color:var(--text-dark);">Need to view records? <a href="/reports" style="color:var(--primary-color);">Go to Reports</a></p>
+        </div>
+    </main>
+</body>
+</html>

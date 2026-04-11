@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance System | Digital Tracking</title>
+    <meta name="description" content="Digital Attendance tracking system college mini project.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="container nav-container">
+            <a href="/" class="logo"><i class="fa-solid fa-graduation-cap"></i> SmartSys</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/login" class="btn btn-primary" style="color:white; padding: 0.4rem 1rem;">Login/Dashboard</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero container animated">
+        <h1>Smart Attendance System</h1>
+        <p>A modern, API-driven digital attendance tracking platform designed to streamline student administration and record management.</p>
+        <a href="#about" class="btn btn-outline">Learn More</a>
+    </header>
+
+    <main class="container">
+        <!-- About Section -->
+        <section id="about">
+            <h2 class="section-title">Project Features</h2>
+            <div class="grid-3">
+                <div class="card text-center">
+                    <i class="fa-solid fa-cloud" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                    <h3>Digital Tracking</h3>
+                    <p class="mt-2 text-muted">Eliminate paper registers with a fully cloud-based attendance solution.</p>
+                </div>
+                <div class="card text-center">
+                    <i class="fa-solid fa-chart-pie" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                    <h3>Data Visualization</h3>
+                    <p class="mt-2 text-muted">Interactive charts and visual dashboards using Chart.js for data insights.</p>
+                </div>
+                <div class="card text-center">
+                    <i class="fa-solid fa-lock" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                    <h3>Secure JWT Auth</h3>
+                    <p class="mt-2 text-muted">A robust RESTful API architecture secured by standard Javascript Web Tokens.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Deployment Section -->
+        <section id="deployment">
+            <h2 class="section-title">Architecture & Deployment</h2>
+            <div class="card">
+                <p>This system operates on a separated frontend and backend API model.</p>
+                <div class="grid-2 mt-2">
+                    <div>
+                        <h4><i class="fa-brands fa-python" style="color:#eab308"></i> Backend (Flask) Deployment</h4>
+                        <ul class="text-muted" style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                            <li>Deployed via <strong>Render</strong> or <strong>Heroku</strong>.</li>
+                            <li>Dependencies: `Flask`, `Flask-SQLAlchemy`, `PyJWT`, `Flask-Cors` (via requirements.txt).</li>
+                            <li>Database: Built-in SQLite for portability.</li>
+                            <li>Run via `gunicorn app:app`.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4><i class="fa-brands fa-js" style="color:#f59e0b"></i> Frontend Deployment</h4>
+                        <ul class="text-muted" style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                            <li>Can be served statically via <strong>Netlify</strong> or <strong>Vercel</strong>.</li>
+                            <li>Currently served securely via Flask `render_template`.</li>
+                            <li>Communicates via standard DOM Fetch commands.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-2" style="background:#1f2937; padding: 1rem; border-radius: 8px; color: #a5b4fc; font-family: monospace;">
+                    <strong>Sample Endpoints:</strong><br>
+                    GET /api/attendance<br>
+                    POST /api/attendance<br>
+                    POST /api/login
+                </div>
+            </div>
+        </section>
+
+        <!-- Team Division -->
+        <section id="team">
+            <h2 class="section-title">Team Structure (5 Members)</h2>
+            <div class="grid-3" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="team-member">
+                    <i class="fa-solid fa-server fa-2x" style="color:var(--primary-color)"></i>
+                    <h4>Member 1</h4>
+                    <p>Backend Developer (Flask API)</p>
+                </div>
+                <div class="team-member">
+                    <i class="fa-solid fa-code fa-2x" style="color:var(--primary-color)"></i>
+                    <h4>Member 2</h4>
+                    <p>Frontend Dev (UI/UX)</p>
+                </div>
+                <div class="team-member">
+                    <i class="fa-solid fa-network-wired fa-2x" style="color:var(--primary-color)"></i>
+                    <h4>Member 3</h4>
+                    <p>API Integration Specialist</p>
+                </div>
+                <div class="team-member">
+                    <i class="fa-solid fa-database fa-2x" style="color:var(--primary-color)"></i>
+                    <h4>Member 4</h4>
+                    <p>Database Manager</p>
+                </div>
+                <div class="team-member">
+                    <i class="fa-solid fa-vial-circle-check fa-2x" style="color:var(--primary-color)"></i>
+                    <h4>Member 5</h4>
+                    <p>Testing & Docs Lead</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>College Mini Project &copy; 2026</p>
+        <p style="font-size: 0.8rem; margin-top: 0.5rem; color: #9ca3af;">Developed via Modern Web Tech.</p>
+    </footer>
+</body>
+</html>

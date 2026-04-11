@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Attendance | Smart Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</head>
+<body onload="checkAuth();">
+    <nav>
+        <div class="container nav-container">
+            <a href="/" class="logo"><i class="fa-solid fa-graduation-cap"></i> SmartSys Dashboard</a>
+            <ul class="nav-links" style="align-items: center;">
+                <li><a href="/dashboard">Overview</a></li>
+                <li><a href="/mark" style="color:var(--primary-color)">Mark Attendance</a></li>
+                <li><a href="/register_face_page">Register Face</a></li>
+                <li><a href="/recognize_page">Live Recognition</a></li>
+                <li><a href="/reports">Reports</a></li>
+                <li><button id="logout-btn" class="btn btn-outline" style="padding: 0.3rem 0.8rem;"><i class="fa-solid fa-sign-out-alt"></i> Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container animated auth-wrapper mt-2" style="min-height: auto; align-items: start; padding-top: 2rem;">
+        <div class="auth-card" style="max-width: 600px; width: 100%;">
+            <h2 class="auth-title">Mark New Attendance</h2>
+            <form id="mark-form">
+                <div class="form-group">
+                    <label for="student_name">Student Full Name</label>
+                    <input type="text" id="student_name" class="form-control" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label for="roll_number">Roll Number</label>
+                    <input type="text" id="roll_number" class="form-control" required placeholder="CS101">
+                </div>
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="status">Attendance Status</label>
+                    <select id="status" class="form-control" required>
+                        <option value="Present">Present</option>
+                        <option value="Absent">Absent</option>
+                        <option value="Late">Late</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Submit Record
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // Set today's date as default
+        document.getElementById('date').valueAsDate = new Date();
+    </script>
+</body>
+</html>
