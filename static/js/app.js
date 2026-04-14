@@ -45,6 +45,32 @@ async function login(event) {
     }
 }
 
+async function signup(event) {
+    event.preventDefault();
+    const username = document.getElementById('signup-username').value;
+    const roll_number = document.getElementById('signup-roll').value;
+    const password = document.getElementById('signup-password').value;
+
+    try {
+        const response = await fetch(`${API_URL}/signup`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username, password, roll_number})
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('Account created! Please login.');
+            setTimeout(() => { window.location.href = '/login'; }, 1500);
+        } else {
+            showToast(data.message || 'Signup failed');
+        }
+    } catch (error) {
+        showToast('Error connecting to server');
+        console.error(error);
+    }
+}
+
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
@@ -218,6 +244,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loginForm = document.getElementById('login-form');
     if (loginForm) loginForm.addEventListener('submit', login);
+
+    const signupForm = document.getElementById('signup-form');
+    if (signupForm) signupForm.addEventListener('submit', signup);
 
     const markForm = document.getElementById('mark-form');
     if (markForm) markForm.addEventListener('submit', markAttendance);

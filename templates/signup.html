@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | Smart Attendance System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="container nav-container">
+            <a href="/" class="logo"><i class="fa-solid fa-graduation-cap"></i> SmartSys</a>
+        </div>
+    </nav>
+
+    <div class="auth-wrapper animated">
+        <div class="auth-card">
+            <h2 class="auth-title">Create Account</h2>
+            <form id="signup-form">
+                <div class="form-group">
+                    <label for="username">Set Username</label>
+                    <input type="text" id="signup-username" class="form-control" required placeholder="Choose a username">
+                </div>
+                 <div class="form-group">
+                    <label for="roll">Roll Number</label>
+                    <input type="text" id="signup-roll" class="form-control" required placeholder="e.g. 104">
+                </div>
+                <div class="form-group">
+                    <label for="password">Set Password</label>
+                    <input type="password" id="signup-password" class="form-control" required placeholder="Create a password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;"><i class="fa-solid fa-user-plus"></i> Sign Up</button>
+            </form>
+            <p style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
+                Already have an account? <a href="/login" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">Login here</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

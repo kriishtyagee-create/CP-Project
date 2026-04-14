@@ -101,6 +101,10 @@ def home():
 def login_page():
     return render_template('login.html')
 
+@app.route('/signup')
+def signup_page():
+    return render_template('signup.html')
+
 @app.route('/dashboard')
 def dashboard_page():
     return render_template('dashboard.html')
@@ -164,6 +168,32 @@ def login():
         })
 
     return jsonify({'message': 'Wrong password'}), 401
+
+@app.route('/api/signup', methods=['POST'])
+def signup():
+    data = request.get_json()
+    if not data or not data.get('username') or not data.get('password') or not data.get('roll_number'):
+        return jsonify({'message': 'Missing data fields'}), 400
+
+    username = data.get('username')
+    
+    if User.query.filter_by(username=username).first():
+        return jsonify({'message': 'User already exists'}), 400
+        
+    roll_number = data.get('roll_number')
+
+    hashed_pw = generate_password_hash(data.get('password'), method='pbkdf2:sha256')
+    new_user = User(
+        username=username,
+        password_hash=hashed_pw,
+        role='student',
+        roll_number=roll_number
+    )
+    
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({'message': 'Student created successfully!'}), 201
 
 @app.route('/api/attendance', methods=['GET'])
 @token_required
@@ -458,13 +488,13 @@ def init_db():
         
         # Add a student user for dummy testing. Password: student123
         hashed_pw_student = generate_password_hash('student123', method='pbkdf2:sha256')
-        student1 = User(username='alice', password_hash=hashed_pw_student, role='student', roll_number="101")
+        student1 = User(username='student', password_hash=hashed_pw_student, role='student', roll_number="101")
         student2 = User(username='bob', password_hash=hashed_pw_student, role='student', roll_number="102")
         db.session.add_all([student1, student2])
         
         # Add some dummy attendance data for demonstration
         dummy_records = [
-            Attendance(student_name="Alice Smith", roll_number="101", status="Present", date=str(datetime.date.today())),
+            Attendance(student_name="Student User", roll_number="101", status="Present", date=str(datetime.date.today())),
             Attendance(student_name="Bob Jones", roll_number="102", status="Absent", date=str(datetime.date.today() - datetime.timedelta(days=1))),
             Attendance(student_name="Charlie Brown", roll_number="103", status="Present", date=str(datetime.date.today()))
         ]
