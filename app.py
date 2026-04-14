@@ -58,6 +58,9 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
+    role = db.Column(db.String(20), default='student', nullable=False)
+    roll_number = db.Column(db.String(50), nullable=True)
+
 
 class Attendance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -118,6 +121,20 @@ def register_face_page():
 def recognize_page():
     return render_template('recognize.html')
 
+@app.route('/student_dashboard')
+def student_dashboard_page():
+    return render_template('student_dashboard.html')
+
+@app.route('/student_mark')
+def student_mark_page():
+    return render_template('student_mark.html')
+
+@app.route('/student_history')
+def student_history_page():
+    return render_template('student_history.html')
+
+
+
 
 # --- REST API Endpoints ---
 
@@ -139,7 +156,12 @@ def login():
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
         }, app.config['SECRET_KEY'], algorithm="HS256")
         
-        return jsonify({'token': token, 'username': user.username})
+        return jsonify({
+            'token': token, 
+            'username': user.username,
+            'role': user.role,
+            'roll_number': user.roll_number
+        })
 
     return jsonify({'message': 'Wrong password'}), 401
 
@@ -209,6 +231,109 @@ def delete_attendance(current_user, id):
     db.session.commit()
     
     return jsonify({'message': 'Record deleted successfully!'})
+
+# --- Student Specific API Endpoints ---
+@app.route('/api/student/stats', methods=['GET'])
+@token_required
+def student_stats(current_user):
+    if current_user.role != 'student':
+        return jsonify({'message': 'Unauthorized'}), 403
+    
+    roll = current_user.roll_number
+    records = Attendance.query.filter_by(roll_number=roll).all()
+    # Mocking total classes held to be a bit random for demonstration, or static
+    # e.g., Assume 40 classes held in total
+    total_classes = 40
+    attended = len([r for r in records if r.status == 'Present'])
+    percentage = (attended / total_classes * 100) if total_classes > 0 else 0
+
+    return jsonify({
+        'totalClasses': total_classes,
+        'classesAttended': attended,
+        'attendancePercentage': round(percentage, 1)
+    })
+
+@app.route('/api/student/history', methods=['GET'])
+@token_required
+def student_history(current_user):
+    if current_user.role != 'student':
+        return jsonify({'message': 'Unauthorized'}), 403
+    
+    roll = current_user.roll_number
+    records = Attendance.query.filter_by(roll_number=roll).order_by(Attendance.id.desc()).all()
+    output = []
+    for record in records:
+        output.append({
+            'id': record.id,
+            'status': record.status,
+            'date': record.date
+        })
+    return jsonify({'history': output})
+
+import base64
+
+@app.route('/api/student/verify_face', methods=['POST'])
+@token_required
+def student_verify_face(current_user):
+    if current_user.role != 'student':
+        return jsonify({'message': 'Unauthorized access'}), 403
+    
+    data = request.get_json()
+    image_data = data.get('image')
+    if not image_data:
+        return jsonify({'success': False, 'message': 'No image data provided'}), 400
+
+    try:
+        # Extract base64 part
+        encoded_data = image_data.split(',')[1] if ',' in image_data else image_data
+        nparr = np.frombuffer(base64.b64decode(encoded_data), np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        # Convert to RGB for face_recognition
+        rgb_frame = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        face_locations = face_recognition.face_locations(rgb_frame)
+        
+        if not face_locations:
+            return jsonify({'success': False, 'message': 'Face Not Recognized (No face found in frame)'}), 400
+
+        face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+        
+        for face_encoding in face_encodings:
+            matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+            
+            if True in matches:
+                first_match_index = matches.index(True)
+                name = known_face_names[first_match_index]
+                
+                if '(' in name:
+                    roll_number = name.split(' (')[1].replace(')', '')
+                    student_name = name.split(' (')[0]
+                    
+                    if roll_number != current_user.roll_number:
+                        return jsonify({'success': False, 'message': 'Face does not match logged-in student.'}), 403
+                    
+                    today_str = str(datetime.date.today())
+                    existing = Attendance.query.filter_by(roll_number=roll_number, date=today_str).first()
+                    
+                    if existing:
+                        return jsonify({'success': False, 'message': 'Already Marked Today'}), 200
+                        
+                    new_record = Attendance(
+                        student_name=student_name,
+                        roll_number=roll_number,
+                        status="Present",
+                        date=today_str
+                    )
+                    db.session.add(new_record)
+                    db.session.commit()
+                    return jsonify({'success': True, 'message': 'Attendance Marked Successfully'})
+
+        return jsonify({'success': False, 'message': 'Face Not Recognized (Not registered)'}), 400
+        
+    except Exception as e:
+        print(f"Error scanning face: {e}")
+        return jsonify({'success': False, 'message': 'Server error while processing image'}), 500
+
 
 @app.route('/api/register_face', methods=['POST'])
 @token_required
@@ -323,22 +448,29 @@ def video_feed():
 # --- Database Initialization ---
 def init_db():
     with app.app_context():
+        # Drop all to easily migrate our test schema
+        db.drop_all()
         db.create_all()
-        # Create a default admin user if none exists
-        if not User.query.filter_by(username='admin').first():
-            hashed_pw = generate_password_hash('admin123', method='pbkdf2:sha256')
-            admin = User(username='admin', password_hash=hashed_pw)
-            db.session.add(admin)
-            
-            # Add some dummy attendance data for demonstration
-            dummy_records = [
-                Attendance(student_name="Alice Smith", roll_number="101", status="Present", date=str(datetime.date.today())),
-                Attendance(student_name="Bob Jones", roll_number="102", status="Absent", date=str(datetime.date.today())),
-                Attendance(student_name="Charlie Brown", roll_number="103", status="Present", date=str(datetime.date.today()))
-            ]
-            db.session.bulk_save_objects(dummy_records)
-            db.session.commit()
-            print("Database initialized with default admin user (admin/admin123) and sample data.")
+        
+        hashed_pw_admin = generate_password_hash('admin123', method='pbkdf2:sha256')
+        admin = User(username='admin', password_hash=hashed_pw_admin, role='admin')
+        db.session.add(admin)
+        
+        # Add a student user for dummy testing. Password: student123
+        hashed_pw_student = generate_password_hash('student123', method='pbkdf2:sha256')
+        student1 = User(username='alice', password_hash=hashed_pw_student, role='student', roll_number="101")
+        student2 = User(username='bob', password_hash=hashed_pw_student, role='student', roll_number="102")
+        db.session.add_all([student1, student2])
+        
+        # Add some dummy attendance data for demonstration
+        dummy_records = [
+            Attendance(student_name="Alice Smith", roll_number="101", status="Present", date=str(datetime.date.today())),
+            Attendance(student_name="Bob Jones", roll_number="102", status="Absent", date=str(datetime.date.today() - datetime.timedelta(days=1))),
+            Attendance(student_name="Charlie Brown", roll_number="103", status="Present", date=str(datetime.date.today()))
+        ]
+        db.session.bulk_save_objects(dummy_records)
+        db.session.commit()
+        print("Database initialized with admin and dummy student users.")
 
 if __name__ == '__main__':
     # Initialize DB on start

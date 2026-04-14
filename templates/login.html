@@ -9,7 +9,11 @@
     <!-- Inline check so logged in users go straight to dashboard -->
     <script>
         if(localStorage.getItem('token')) {
-            window.location.href = '/dashboard';
+            if(localStorage.getItem('role') === 'student') {
+                window.location.href = '/student_dashboard';
+            } else {
+                window.location.href = '/dashboard';
+            }
         }
     </script>
 </head>
@@ -35,7 +39,8 @@
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
             </form>
             <p style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
-                Default Credentials: <b>admin</b> / <b>admin123</b>
+                Student Mock: <b>alice</b> / <b>student123</b><br>
+                Admin Mock: <b>admin</b> / <b>admin123</b>
             </p>
         </div>
     </div>

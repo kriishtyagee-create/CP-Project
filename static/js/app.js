@@ -26,8 +26,16 @@ async function login(event) {
         if (response.ok) {
             localStorage.setItem('token', data.token);
             localStorage.setItem('username', data.username);
+            localStorage.setItem('role', data.role || 'admin');
+            
             showToast('Login successful!');
-            setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
+            setTimeout(() => { 
+                if (data.role === 'student') {
+                    window.location.href = '/student_dashboard'; 
+                } else {
+                    window.location.href = '/dashboard'; 
+                }
+            }, 1000);
         } else {
             showToast(data.message || 'Login failed');
         }
@@ -40,6 +48,7 @@ async function login(event) {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
+    localStorage.removeItem('role');
     window.location.href = '/';
 }
 
@@ -120,6 +129,84 @@ async function deleteRecord(id) {
     }
 }
 
+// --- Student Logic ---
+async function fetchStudentStats() {
+    try {
+        const response = await fetch(`${API_URL}/student/stats`, { headers: getAuthHeaders() });
+        if (response.status === 401) { logout(); return; }
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to fetch stats:', error);
+        return null;
+    }
+}
+
+async function fetchStudentHistory() {
+    try {
+        const response = await fetch(`${API_URL}/student/history`, { headers: getAuthHeaders() });
+        if (response.status === 401) { logout(); return; }
+        const data = await response.json();
+        return data.history;
+    } catch (error) {
+        console.error('Failed to fetch history:', error);
+        return [];
+    }
+}
+
+async function startWebcam() {
+    const video = document.getElementById('webcam');
+    if (!video) return;
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+    } catch (err) {
+        console.error("Error accessing webcam: ", err);
+        showToast("Cannot access webcam. Please allow permissions.");
+    }
+}
+
+async function captureAndVerifyFace() {
+    const video = document.getElementById('webcam');
+    const canvas = document.getElementById('canvas');
+    if (!video || !canvas) return;
+
+    const context = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    const imageData = canvas.toDataURL('image/jpeg');
+    const scanBtn = document.getElementById('scan-btn');
+    if(scanBtn) {
+        scanBtn.disabled = true;
+        scanBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Scanning...';
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/student/verify_face`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ image: imageData })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('✅ ' + data.message);
+        } else {
+            showToast('⚠️ ' + data.message);
+        }
+    } catch (error) {
+        console.error(error);
+        showToast('❌ Server Error during verification');
+    } finally {
+        if(scanBtn) {
+            scanBtn.disabled = false;
+            scanBtn.innerHTML = '<i class="fa-solid fa-expand"></i> Scan Face & Mark Attendance';
+        }
+    }
+}
+
 // Ensure elements exist before adding listeners
 document.addEventListener('DOMContentLoaded', () => {
     // Inject toast UI if not exists
@@ -135,6 +222,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const markForm = document.getElementById('mark-form');
     if (markForm) markForm.addEventListener('submit', markAttendance);
 
+    const scanBtn = document.getElementById('scan-btn');
+    if (scanBtn) scanBtn.addEventListener('click', captureAndVerifyFace);
+
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
+    
+    // Auto start webcam if element exists
+    if (document.getElementById('webcam')) {
+        startWebcam();
+    }
 });

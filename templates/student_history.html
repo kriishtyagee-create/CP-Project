@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance History | Smart Attendance System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="container nav-container">
+            <a href="/student_dashboard" class="logo"><i class="fa-solid fa-graduation-cap"></i> SmartSys</a>
+            <ul class="nav-links">
+                <li><a href="/student_dashboard"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="/student_history" style="color:var(--primary-color)"><i class="fa-solid fa-clock-rotate-left"></i> History</a></li>
+                <li><a href="#" id="logout-btn" class="btn btn-outline" style="padding: 0.3rem 0.8rem;">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container animated" style="margin-top: 2rem;">
+        <h2 class="section-title" style="margin-top:0;">My Attendance History</h2>
+        
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="student-history-body">
+                    <tr><td colspan="2" class="text-center">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            checkAuth();
+            if (localStorage.getItem('role') !== 'student') {
+                window.location.href = '/dashboard';
+            }
+            
+            const history = await fetchStudentHistory();
+            const tbody = document.getElementById('student-history-body');
+            tbody.innerHTML = '';
+            
+            if (!history || history.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" class="text-center">No attendance records found.</td></tr>';
+                return;
+            }
+            
+            history.forEach(item => {
+                const tr = document.createElement('tr');
+                let badgeClass = 'badge-present';
+                if (item.status === 'Absent') badgeClass = 'badge-absent';
+                if (item.status === 'Late') badgeClass = 'badge-late';
+                
+                tr.innerHTML = `
+                    <td>${item.date}</td>
+                    <td><span class="badge ${badgeClass}">${item.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        });
+    </script>
+</body>
+</html>

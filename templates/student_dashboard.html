@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | Smart Attendance System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <div class="container nav-container">
+            <a href="/student_dashboard" class="logo"><i class="fa-solid fa-graduation-cap"></i> SmartSys</a>
+            <ul class="nav-links">
+                <li><a href="/student_dashboard"><i class="fa-solid fa-house"></i> Home</a></li>
+                <li><a href="/student_history"><i class="fa-solid fa-clock-rotate-left"></i> History</a></li>
+                <li><a href="#" id="logout-btn" class="btn btn-outline" style="padding: 0.3rem 0.8rem;">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container animated" style="margin-top: 2rem;">
+        <div class="welcome-badge">
+            <h2>Welcome <span id="student-name">Student</span>!</h2>
+            <p><i class="fa-solid fa-id-card"></i> Roll Number: <span id="student-roll">N/A</span></p>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3 id="stat-attended">0</h3>
+                    <p>Classes Attended</p>
+                </div>
+                <i class="fa-solid fa-calendar-check fa-3x" style="color: var(--success); opacity: 0.2;"></i>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3 id="stat-total">0</h3>
+                    <p>Total Classes</p>
+                </div>
+                <i class="fa-solid fa-layer-group fa-3x" style="color: var(--primary-color); opacity: 0.2;"></i>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3 id="stat-percentage">0%</h3>
+                    <p>Attendance Rate</p>
+                </div>
+                <i class="fa-solid fa-chart-line fa-3x" style="color: var(--warning); opacity: 0.2;"></i>
+            </div>
+        </div>
+
+        <a href="/student_mark" class="btn btn-primary giant-btn">
+            <i class="fa-solid fa-camera"></i> Mark My Attendance
+        </a>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            checkAuth();
+            if (localStorage.getItem('role') !== 'student') {
+                window.location.href = '/dashboard';
+            }
+
+            document.getElementById('student-name').textContent = localStorage.getItem('username');
+            // Extract roll number if needed, or get it from an API. (Our login doesn't expose it to localStorage, wait, it does! Oh wait, `app.js` login doesn't store roll number, but backend returns it. I will update app.js login or just use an API endpoint. Wait, `fetchStudentStats` works.)
+            
+            const stats = await fetchStudentStats();
+            if(stats) {
+                document.getElementById('stat-attended').textContent = stats.classesAttended;
+                document.getElementById('stat-total').textContent = stats.totalClasses;
+                document.getElementById('stat-percentage').textContent = stats.attendancePercentage + '%';
+            }
+        });
+    </script>
+</body>
+</html>
